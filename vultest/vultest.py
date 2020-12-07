@@ -18,15 +18,21 @@ def test_ip(deviceip: str) -> bool:
     :param deviceip: ip address for the device
     :return: boolean stating whether ip is valid or not
     """
+
+    # Defining an empty dictionary to store the result
+    resultdict = dict()
+
     try:
         _ = str(ipaddress.ip_address(deviceip))
-        ipflag = True # Set flag to True since it is valid
+        resultdict['ipflag'] = True # Set flag to True since it is valid
+        resultdict['Status'] = 'Valid IP'
     except ValueError:
-        ipflag = False # Set flag to False since it is invalid
+        resultdict['ipflag'] = False # Set flag to False since it is invalid
+        resultdict['Status'] = 'Not a Valid IP'
     finally:
-        return ipflag
+        return resultdict
 
-def device_login(username: str, password: str, deviceip: str):
+def device_login(username: str, password: str, deviceip: str) -> object and dict:
 
     """
     Use provided Credentials & Device IP to login 
@@ -41,25 +47,33 @@ def device_login(username: str, password: str, deviceip: str):
     # Defining an empty channel variable and an empty dictionary for storing the result
     ssh = None
     resultdict = dict()
-    try:
-        ssh_pre = pmk.SSHClient()
-        ssh_pre.set_missing_host_key_policy(pmk.AutoAddPolicy())
-        ssh_pre.connect(hostname=deviceip, username=username, password=password, port=22, timeout=10, look_for_keys=False, allow_agent=False) # Connecting to device
-        ssh = ssh_pre.invoke_shell() # Invoking shell
-        resultdict['loginflag'] = True
-        resultdict['Status'] = 'Login Success'
-    
-    except pmk.ssh_exception.AuthenticationException:
-        resultdict['loginflag'] = False
-        resultdict['Status'] = 'Authentication Failed'
 
+    # Test the IP provided
+    iptestresult = test_ip(deviceip)
+    if (iptestresult['ipflag'] != True):
+        return ssh, iptestresult
+    else:
+        try:
+            ssh_pre = pmk.SSHClient()
+            ssh_pre.set_missing_host_key_policy(pmk.AutoAddPolicy())
+            ssh_pre.connect(hostname=deviceip, username=username, password=password, port=22, timeout=10, look_for_keys=False, allow_agent=False) # Connecting to device
+            ssh = ssh_pre.invoke_shell() # Invoking shell
+            resultdict['loginflag'] = True
+            resultdict['Status'] = 'Login Success'
+        
+        except pmk.ssh_exception.AuthenticationException:
+            resultdict['loginflag'] = False
+            resultdict['Status'] = 'Authentication Failed'
 
-    except Exception as error:
-        resultdict['loginflag'] = False
-        resultdict['Status'] = error
+        except pmk.ssh_exception.NoValidConnectionsError:
+            resultdict['loginflag'] = False
+            resultdict['Status'] = 'Unable to connect'
 
-    finally:
-        return ssh, resultdict
+        except Exception as error:
+            resultdict['loginflag'] = False
+            resultdict['Status'] = error
+
+    return ssh, resultdict
 
 def send_command(username: str, password: str, deviceip: str, command: str) -> dict:
     
@@ -81,20 +95,24 @@ def send_command(username: str, password: str, deviceip: str, command: str) -> d
 
     # Logging the device and returning the channel
     ssh, login_result = device_login(username, password, deviceip)
-    if (login_result['loginflag'] != True):
+    if ('loginflag' in login_result and login_result['loginflag'] != True) or ('ipflag' in login_result and login_result['ipflag'] != True):
         return login_result
     else:
-        ssh.send("terminal length 0\n") # Removing the paging of output
-        ssh.send("\n")
-        time.sleep(1)
-        ssh.send(command + "\n") # Triggering the command
-        time.sleep(10)
-        outputa = ssh.recv(999999) # Recieving the output
-        ssh.close() # Closing the session
-        outputb = outputa.decode('utf-8') # Encoding the output
-        cmd_output = outputb.split("\n",5)[5] # Removing lines that are not required
-        resultdict['cmd_output'] = cmd_output
-        resultdict['cmdflag'] = True
+        if command != '':
+            ssh.send("terminal length 0\n") # Removing the paging of output
+            ssh.send("\n")
+            time.sleep(1)
+            ssh.send(command + "\n") # Triggering the command
+            time.sleep(10)
+            outputa = ssh.recv(999999) # Recieving the output
+            ssh.close() # Closing the session
+            outputb = outputa.decode('utf-8') # Decoding the output
+            cmd_output = outputb.split("\n",5)[5] # Removing lines that are not required
+            resultdict['cmd_output'] = cmd_output
+            resultdict['cmdflag'] = True
+        else:
+            resultdict['cmdflag'] = False
+            resultdict['Status'] = 'Command Field Empty'
         return resultdict
 
 def test_pattern(username: str, password: str, deviceip: str, command: str, pattern: str ) -> dict:
@@ -115,25 +133,23 @@ def test_pattern(username: str, password: str, deviceip: str, command: str, patt
     result = dict()
     command_result = dict()
 
-    # Test the IP provided
-    iptestresult = test_ip(deviceip)
-
-    result['IP'] = deviceip
-    if (iptestresult != True):
-        result['Status'] = 'Not a valid IP'
-        return result
+    # Get the output of the command from the device
+    command_result = send_command(username, password, deviceip, command)
+    if ('loginflag' in command_result and command_result['loginflag'] != True) or ('cmdflag' in command_result and command_result['cmdflag'] != True) or ('ipflag' in command_result and command_result['ipflag'] != True):
+        return command_result
     else:
-        # Get the output of the command from the device
-        command_result = send_command(username, password, deviceip, command)
-        if command_result['cmdflag'] != True:
-            return command_result
-        else:
-            cmd_output = command_result['cmd_output']
+        cmd_output = command_result['cmd_output']
+        
+        if pattern != '':
             patternsearch = re.search(pattern, cmd_output) # Searching the pattern in output of the command
+            result['IP'] = deviceip
             result['Command'] = command 
             result['Pattern'] = pattern
             if patternsearch == None:
-                result['Status'] = 'Present'
-            else:
                 result['Status'] = 'Missing'
-            return result
+            else:
+                result['Status'] = 'Present'
+        else:
+            result['patternflag'] = False
+            result['Status'] = 'Empty Pattern Field'
+        return result
