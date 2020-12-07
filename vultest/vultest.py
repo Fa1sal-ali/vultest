@@ -26,6 +26,41 @@ def test_ip(deviceip: str) -> bool:
     finally:
         return ipflag
 
+def device_login(username: str, password: str, deviceip: str):
+
+    """
+    Use provided Credentials & Device IP to login 
+    into the device and return the SSH channel along with result.
+
+    :param username: username for accessing device
+    :param password: password for accessing device
+    :param deviceip: ip address for the device
+    :return: SSH channel and dictionary containing the result
+    """
+
+    # Defining an empty channel variable and an empty dictionary for storing the result
+    ssh = None
+    resultdict = dict()
+    try:
+        ssh_pre = pmk.SSHClient()
+        ssh_pre.set_missing_host_key_policy(pmk.AutoAddPolicy())
+        ssh_pre.connect(hostname=deviceip, username=username, password=password, port=22, timeout=10, look_for_keys=False, allow_agent=False) # Connecting to device
+        ssh = ssh_pre.invoke_shell() # Invoking shell
+        resultdict['loginflag'] = True
+        resultdict['Status'] = 'Login Success'
+    
+    except pmk.ssh_exception.AuthenticationException:
+        resultdict['loginflag'] = False
+        resultdict['Status'] = 'Authentication Failed'
+
+
+    except Exception as error:
+        resultdict['loginflag'] = False
+        resultdict['Status'] = error
+
+    finally:
+        return ssh, resultdict
+
 def send_command(username: str, password: str, deviceip: str, command: str) -> dict:
     
     """
@@ -43,11 +78,12 @@ def send_command(username: str, password: str, deviceip: str, command: str) -> d
     # Defining an empty dictionary for storing the result
     resultdict = dict()
     cmd_output = ""
-    try:
-        ssh_pre = pmk.SSHClient()
-        ssh_pre.set_missing_host_key_policy(pmk.AutoAddPolicy())
-        ssh_pre.connect(hostname=deviceip, username=username, password=password, port=22, timeout=10, look_for_keys=False, allow_agent=False) # Connecting to device
-        ssh = ssh_pre.invoke_shell() # Invoking sheel
+
+    # Logging the device and returning the channel
+    ssh, login_result = device_login(username, password, deviceip)
+    if (login_result['loginflag'] != True):
+        return login_result
+    else:
         ssh.send("terminal length 0\n") # Removing the paging of output
         ssh.send("\n")
         time.sleep(1)
@@ -59,19 +95,6 @@ def send_command(username: str, password: str, deviceip: str, command: str) -> d
         cmd_output = outputb.split("\n",5)[5] # Removing lines that are not required
         resultdict['cmd_output'] = cmd_output
         resultdict['cmdflag'] = True
-        resultdict['Status'] = 'Output Recieved'
-    
-    except pmk.ssh_exception.AuthenticationException:
-        resultdict['cmd_output'] = cmd_output
-        resultdict['cmdflag'] = False
-        resultdict['Status'] = 'Authentication Failed'
-
-    except Exception as error:
-        resultdict['cmd_output'] = cmd_output
-        resultdict['cmdflag'] = False
-        resultdict['Status'] = error
-
-    finally:
         return resultdict
 
 def test_pattern(username: str, password: str, deviceip: str, command: str, pattern: str ) -> dict:
