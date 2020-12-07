@@ -6,7 +6,7 @@
 # Import libraries
 import ipaddress
 import paramiko as pmk
-import regex
+import re
 import time
 
 def test_ip(deviceip: str) -> bool:
@@ -26,7 +26,7 @@ def test_ip(deviceip: str) -> bool:
     finally:
         return ipflag
 
-def send_command(username: str, password: str, deviceip: str, command: str):
+def send_command(username: str, password: str, deviceip: str, command: str) -> dict:
     
     """
     Use provided Credentials & Device IP to login 
@@ -95,8 +95,8 @@ def test_pattern(username: str, password: str, deviceip: str, command: str, patt
     # Test the IP provided
     iptestresult = test_ip(deviceip)
 
+    result['IP'] = deviceip
     if (iptestresult != True):
-        result['IP'] = deviceip
         result['Status'] = 'Not a valid IP'
         return result
     else:
@@ -106,4 +106,11 @@ def test_pattern(username: str, password: str, deviceip: str, command: str, patt
             return command_result
         else:
             cmd_output = command_result['cmd_output']
-        
+            patternsearch = re.search(pattern, cmd_output) # Searching the pattern in output of the command
+            result['Command'] = command 
+            result['Pattern'] = pattern
+            if patternsearch == None:
+                result['Status'] = 'Present'
+            else:
+                result['Status'] = 'Missing'
+            return result
