@@ -22,6 +22,7 @@ vultest.test_pattern(username = '', password = '', deviceip = '', command = '', 
 ## Dependencies
 
 [ipaddress](https://github.com/phihag/ipaddress)
+
 [paramiko](https://github.com/paramiko/paramiko)
 
 ## Contributing
