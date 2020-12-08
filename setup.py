@@ -8,8 +8,9 @@ setup(
     author='Faisal Ali',
     author_email='fzl.ali33@gmail.com',
     url='https://github.com/Fa1sal-ali/vultest',
-    platform='any',
     license='MIT',
-    install_requires=['ipaddress','paramiko'],
+    install_requires=['ipaddress==1.0.23','paramiko==2.6.0'],
+    long_description=open('README.md').read(),
+    platforms="Linux; MacOS X; Windows",
     python_requires='>=3.8'
 )

@@ -19,6 +19,11 @@ vultest.send_command(username = '', password = '', deviceip = '', command = '') 
 vultest.test_pattern(username = '', password = '', deviceip = '', command = '', pattern = '') # returns whether the pattern entered is present in the output of the command
 ```
 
+## Dependencies
+
+[ipaddress](https://github.com/phihag/ipaddress)
+[paramiko](https://github.com/paramiko/paramiko)
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
