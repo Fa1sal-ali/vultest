@@ -5,6 +5,10 @@ Vultest is a python library for testing router vulnerability.
 
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install vultest.
 
+The source code is currently hosted on GitHub at: https://github.com/Fa1sal-ali/vultest
+
+Binary installers for the latest released version are available at the [Python Package Index - PyPi](https://pypi.org/project/vultest/)
+
 ```bash
 pip install vultest
 ```
@@ -27,8 +31,6 @@ vultest.test_pattern(username = '', password = '', deviceip = '', command = '', 
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
-Please make sure to update tests as appropriate.
 
 ## License
 [MIT](https://github.com/Fa1sal-ali/vultest/blob/main/LICENSE)
