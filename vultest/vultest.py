@@ -191,6 +191,7 @@ def test_pattern(username: str, password: str, deviceip: str, command: str, patt
             result['deviceip'] = deviceip
             result['Command'] = command 
             result['Pattern'] = pattern
+            result['patternflag'] = True
             if patternsearch == None:
                 result['Status'] = 'Missing'
             else:
