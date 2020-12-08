@@ -18,9 +18,10 @@ pip install vultest
 from vultest import vultest
 
 vultest.test_ip(deviceip = '') # returns if ip is valid or not
+vultest.test_ping(deviceip = '') # returns if ip is reachable or not
 vultest.device_login(username = '', password = '', deviceip = '') # returns a channel for communicating with device and a dictionary with result
 vultest.send_command(username = '', password = '', deviceip = '', command = '') # returns the output of the command triggered on the device
-vultest.test_pattern(username = '', password = '', deviceip = '', command = '', pattern = '') # returns whether the pattern entered is present in the output of the command
+vultest.test_pattern(username = '', password = '', deviceip = '', command = '', pattern = '') # returns whether the pattern present in the output of the command or not
 ```
 
 ## Dependencies
