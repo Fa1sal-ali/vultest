@@ -4,7 +4,7 @@ setup(
     name='vultest-fa1zali',
     packages=find_packages(),
     version='0.1.0',
-    description='A python module for testing router vulnerability',
+    description='Vultest is a python library for testing router vulnerability.',
     author='Faisal Ali',
     author_email='fzl.ali33@gmail.com',
     url='https://github.com/Fa1sal-ali/vultest',
